@@ -39,6 +39,8 @@ const code = ref<string>('');
 
 const pinInputContainerRef = useTemplateRef('pinInputContainerRef');
 
+import { trans } from 'laravel-vue-i18n';
+
 const modalConfig = computed<{
     title: string;
     description: string;
@@ -46,26 +48,28 @@ const modalConfig = computed<{
 }>(() => {
     if (props.twoFactorEnabled) {
         return {
-            title: 'Two-Factor Authentication Enabled',
-            description:
+            title: trans('Two-Factor Authentication Enabled'),
+            description: trans(
                 'Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.',
-            buttonText: 'Close',
+            ),
+            buttonText: trans('Close'),
         };
     }
 
     if (showVerificationStep.value) {
         return {
-            title: 'Verify Authentication Code',
-            description: 'Enter the 6-digit code from your authenticator app',
-            buttonText: 'Continue',
+            title: trans('Verify Authentication Code'),
+            description: trans('Enter the 6-digit code from your authenticator app'),
+            buttonText: trans('Continue'),
         };
     }
 
     return {
-        title: 'Enable Two-Factor Authentication',
-        description:
+        title: trans('Enable Two-Factor Authentication'),
+        description: trans(
             'To finish enabling two-factor authentication, scan the QR code or enter the setup key in your authenticator app',
-        buttonText: 'Continue',
+        ),
+        buttonText: trans('Continue'),
     };
 });
 
@@ -190,7 +194,7 @@ watch(
                                 class="absolute inset-0 top-1/2 h-px w-full bg-border"
                             />
                             <span class="relative bg-card px-2 py-1"
-                                >or, enter the code manually</span
+                                >{{ $t('or, enter the code manually') }}</span
                             >
                         </div>
 
@@ -261,8 +265,7 @@ watch(
                                 </InputOTP>
                                 <InputError
                                     :message="
-                                        errors?.confirmTwoFactorAuthentication
-                                            ?.code
+                                        errors?.['confirmTwoFactorAuthentication.code']
                                     "
                                 />
                             </div>
@@ -275,14 +278,14 @@ watch(
                                     @click="showVerificationStep = false"
                                     :disabled="processing"
                                 >
-                                    Back
+                                    {{ $t('Back') }}
                                 </Button>
                                 <Button
                                     type="submit"
                                     class="w-auto flex-1"
                                     :disabled="processing || code.length < 6"
                                 >
-                                    Confirm
+                                    {{ $t('Confirm') }}
                                 </Button>
                             </div>
                         </div>

@@ -6,6 +6,8 @@ import { renderToString } from 'vue/server-renderer';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+import { i18nVue } from 'laravel-vue-i18n';
+
 createServer(
     (page) =>
         createInertiaApp({
@@ -18,7 +20,15 @@ createServer(
                     import.meta.glob<DefineComponent>('./pages/**/*.vue'),
                 ),
             setup: ({ App, props, plugin }) =>
-                createSSRApp({ render: () => h(App, props) }).use(plugin),
+                createSSRApp({ render: () => h(App, props) })
+                    .use(plugin)
+                    .use(i18nVue, {
+                        lang: 'es',
+                        resolve: (lang) => {
+                            const langs = import.meta.glob('../../lang/*.json', { eager: true });
+                            return langs[`../../lang/${lang}.json`];
+                        },
+                    }),
         }),
     { cluster: true },
 );
