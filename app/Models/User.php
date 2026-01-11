@@ -49,4 +49,51 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+    // Relaciones
+    public function uploadedItems()
+    {
+        return $this->hasMany(Item::class, 'uploaded_by');
+    }
+
+    public function collections()
+    {
+        return $this->hasMany(Collection::class);
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    public function readingProgress()
+    {
+        return $this->hasMany(ReadingProgress::class);
+    }
+
+    // Verificar si es admin
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    // Obtener items en lectura
+    public function currentlyReading()
+    {
+        return $this->readingProgress()
+                    ->where('status', 'reading')
+                    ->with('item')
+                    ->get()
+                    ->pluck('item');
+    }
+
+    // Obtener wishlist
+    public function wishlist()
+    {
+        return $this->readingProgress()
+                    ->where('status', 'wishlist')
+                    ->with('item')
+                    ->get()
+                    ->pluck('item');
+    }
 }
