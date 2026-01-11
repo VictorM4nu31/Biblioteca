@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('item_id')->constrained()->onDelete('cascade');
-            $table->integer('current_pages');
+            $table->integer('current_page')->default(0);
+            $table->integer('total_pages')->nullable();
             $table->enum('status', ['reading', 'completed', 'wishlist'])->default('wishlist');
             $table->timestamps();
 

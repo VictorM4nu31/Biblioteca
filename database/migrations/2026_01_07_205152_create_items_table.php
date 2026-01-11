@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('type', ['book', 'comic', 'magazine']);
             $table->string('language')->default('es');
             $table->integer('pages')->nullable();
+            $table->string('cover_image')->nullable();
             $table->string('file_path');
             $table->bigInteger('file_size')->nullable();
             $table->foreignId('uploaded_by')->constrained('users')->onDelete('cascade');
