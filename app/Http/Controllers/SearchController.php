@@ -84,8 +84,8 @@ class SearchController extends Controller
 
         return Inertia::render('Search/Index', [
             'items' => $items,
-            'categories' => Category::orderBy('name')->get(),
-            'tags' => Tag::orderBy('name')->get(),
+            'categories' => Category::orderBy('name', 'asc')->get(),
+            'tags' => Tag::orderBy('name', 'asc')->get(),
             'filters' => $request->only(['q', 'type', 'category', 'tag', 'language', 'year', 'sort']),
         ]);
     }
@@ -96,8 +96,8 @@ class SearchController extends Controller
     public function advanced()
     {
         return Inertia::render('Search/Advanced', [
-            'categories' => Category::orderBy('name')->get(),
-            'tags' => Tag::orderBy('name')->get(),
+            'categories' => Category::orderBy('name', 'asc')->get(),
+            'tags' => Tag::orderBy('name', 'asc')->get(),
             'languages' => Item::distinct()->pluck('language'),
             'years' => Item::distinct()->orderByDesc('publication_year')->pluck('publication_year'),
         ]);

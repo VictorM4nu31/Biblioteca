@@ -9,6 +9,7 @@ use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class ItemController extends Controller
 {
@@ -88,7 +89,7 @@ class ItemController extends Controller
             'cover_image' => $coverImagePath,
             'file_path' => $filePath,
             'file_size' => $fileSize,
-            'uploaded_by' => auth()->id(),
+            'uploaded_by' => Auth::user()?->id(),
         ]);
 
         // Asociar categorías y tags
@@ -164,7 +165,7 @@ class ItemController extends Controller
         }
 
         // Actualizar datos
-        $item->update([
+        $item->fill([
             'title' => $validated['title'],
             'author' => $validated['author'] ?? null,
             'publisher' => $validated['publisher'] ?? null,
@@ -174,7 +175,7 @@ class ItemController extends Controller
             'type' => $validated['type'],
             'language' => $validated['language'],
             'pages' => $validated['pages'] ?? null,
-        ]);
+        ])->save();
 
         // Sincronizar categorías y tags
         if (isset($validated['categories'])) {
@@ -202,7 +203,7 @@ class ItemController extends Controller
             Storage::disk('public')->delete($item->cover_image);
         }
 
-        $item->delete();
+        Item::destroy($item->id);
 
         return redirect()->route('library.items.index')
             ->with('success', 'Item eliminado exitosamente.');
@@ -215,6 +216,6 @@ class ItemController extends Controller
     {
         $this->authorize('view items');
 
-        return Storage::disk('public')->download($item->file_path, $item->title);
+        return response()->download(storage_path('app/public/' . $item->file_path), $item->title);
     }
 }

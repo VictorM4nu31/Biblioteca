@@ -16,7 +16,7 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::withCount('items')
-            ->orderBy('name')
+            ->orderBy('name', 'asc')
             ->get();
 
         return Inertia::render('Library/Categories/Index', [
@@ -90,7 +90,7 @@ class CategoryController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
-        $category->update($validated);
+        $category->fill($validated)->save();
 
         return redirect()->route('library.categories.index')
             ->with('success', 'Categoría actualizada exitosamente.');
@@ -108,7 +108,7 @@ class CategoryController extends Controller
             return back()->with('error', 'No se puede eliminar una categoría con items asociados.');
         }
 
-        $category->delete();
+        Category::destroy($category->id);
 
         return redirect()->route('library.categories.index')
             ->with('success', 'Categoría eliminada exitosamente.');

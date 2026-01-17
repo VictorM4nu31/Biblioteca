@@ -49,7 +49,7 @@ class RatingModerationController extends Controller
     {
         $this->authorize('moderate ratings');
 
-        $rating->delete();
+        Rating::destroy($rating->id);
 
         return back()->with('success', 'Calificación eliminada exitosamente.');
     }

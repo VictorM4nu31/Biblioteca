@@ -58,7 +58,7 @@ class DashboardController extends Controller
         $topRatedItems = Item::with(['uploader', 'categories'])
             ->withAvg('ratings', 'rating')
             ->withCount('ratings')
-            ->having('ratings_count', '>=', 3)
+            ->has('ratings', '>=', 3)
             ->orderByDesc('ratings_avg_rating')
             ->take(10)
             ->get();

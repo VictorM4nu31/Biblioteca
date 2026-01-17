@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -25,14 +26,14 @@ class UserController extends Controller
         // Filtros
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
+                $q->where('name', 'like', '%' . $request->search . '%', 'and')
                   ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
 
         if ($request->filled('role')) {
             $query->whereHas('roles', function ($q) use ($request) {
-                $q->where('name', $request->role);
+                $q->where('name', '=', $request->role, 'and');
             });
         }
 
@@ -128,16 +129,16 @@ class UserController extends Controller
     {
         $validated = $request->validated();
 
-        $user->update([
+        $user->fill([
             'name' => $validated['name'],
             'email' => $validated['email'],
-        ]);
+        ])->save();
 
         // Actualizar contraseña si se proporcionó
         if (!empty($validated['password'])) {
-            $user->update([
+            $user->fill([
                 'password' => Hash::make($validated['password']),
-            ]);
+            ])->save();
         }
 
         // Sincronizar roles
@@ -157,11 +158,11 @@ class UserController extends Controller
         $this->authorize('manage users');
 
         // No permitir eliminar el propio usuario
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::user()?->id()) {
             return back()->with('error', 'No puedes eliminar tu propia cuenta.');
         }
 
-        $user->delete();
+        User::destroy($user->id);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario eliminado exitosamente.');

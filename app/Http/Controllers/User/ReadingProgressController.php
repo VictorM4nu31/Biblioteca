@@ -7,6 +7,7 @@ use App\Models\Item;
 use App\Models\ReadingProgress;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class ReadingProgressController extends Controller
 {
@@ -15,7 +16,7 @@ class ReadingProgressController extends Controller
      */
     public function index()
     {
-        $progress = ReadingProgress::where('user_id', auth()->id())
+        $progress = ReadingProgress::where('user_id', '=', Auth::user()?->id(), 'and')
             ->with(['item' => function ($query) {
                 $query->with(['uploader', 'categories']);
             }])
@@ -43,7 +44,7 @@ class ReadingProgressController extends Controller
 
         $progress = ReadingProgress::updateOrCreate(
             [
-                'user_id' => auth()->id(),
+                'user_id' => Auth::user()?->id(),
                 'item_id' => $item->id,
             ],
             [
@@ -62,7 +63,7 @@ class ReadingProgressController extends Controller
     public function update(Request $request, ReadingProgress $progress)
     {
         // Verificar que el usuario sea el dueño
-        if ($progress->user_id !== auth()->id()) {
+        if ($progress->user_id !== Auth::user()?->id()) {
             abort(403, 'No puedes editar este progreso.');
         }
 
@@ -72,7 +73,7 @@ class ReadingProgressController extends Controller
             'status' => 'required|in:reading,completed,wishlist',
         ]);
 
-        $progress->update($validated);
+        $progress->fill($validated)->save();
 
         return back()->with('success', 'Progreso actualizado exitosamente.');
     }
@@ -83,11 +84,11 @@ class ReadingProgressController extends Controller
     public function destroy(ReadingProgress $progress)
     {
         // Verificar que el usuario sea el dueño
-        if ($progress->user_id !== auth()->id()) {
+        if ($progress->user_id !== Auth::user()?->id()) {
             abort(403, 'No puedes eliminar este progreso.');
         }
 
-        $progress->delete();
+        ReadingProgress::destroy($progress->id);
 
         return back()->with('success', 'Progreso eliminado exitosamente.');
     }
@@ -99,7 +100,7 @@ class ReadingProgressController extends Controller
     {
         ReadingProgress::updateOrCreate(
             [
-                'user_id' => auth()->id(),
+                'user_id' => Auth::user()?->id(),
                 'item_id' => $item->id,
             ],
             [
@@ -117,18 +118,18 @@ class ReadingProgressController extends Controller
      */
     public function markAsCompleted(Item $item)
     {
-        $progress = ReadingProgress::where('user_id', auth()->id())
-            ->where('item_id', $item->id)
+        $progress = ReadingProgress::where('user_id', '=', Auth::user()?->id(), 'and')
+            ->where('item_id', '=', $item->id, 'and')
             ->first();
 
         if ($progress) {
-            $progress->update([
+            $progress->fill([
                 'current_page' => $progress->total_pages ?? $item->pages,
                 'status' => 'completed',
-            ]);
+            ])->save();
         } else {
             ReadingProgress::create([
-                'user_id' => auth()->id(),
+                'user_id' => Auth::user()?->id(),
                 'item_id' => $item->id,
                 'current_page' => $item->pages ?? 0,
                 'total_pages' => $item->pages,

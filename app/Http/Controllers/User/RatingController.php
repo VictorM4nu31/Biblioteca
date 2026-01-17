@@ -7,6 +7,7 @@ use App\Models\Item;
 use App\Models\Rating;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class RatingController extends Controller
 {
@@ -23,8 +24,8 @@ class RatingController extends Controller
         ]);
 
         // Verificar si el usuario ya calificó este item
-        $existingRating = Rating::where('user_id', auth()->id())
-            ->where('item_id', $item->id)
+        $existingRating = Rating::where('user_id', '=', Auth::user()?->id(), 'and')
+            ->where('item_id', '=', $item->id, 'and')
             ->first();
 
         if ($existingRating) {
@@ -32,7 +33,7 @@ class RatingController extends Controller
         }
 
         Rating::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::user()?->id(),
             'item_id' => $item->id,
             'rating' => $validated['rating'],
             'review' => $validated['review'] ?? null,
@@ -47,7 +48,7 @@ class RatingController extends Controller
     public function update(Request $request, Rating $rating)
     {
         // Verificar que el usuario sea el dueño
-        if ($rating->user_id !== auth()->id()) {
+        if ($rating->user_id !== Auth::user()?->id()) {
             abort(403, 'No puedes editar esta calificación.');
         }
 
@@ -58,7 +59,7 @@ class RatingController extends Controller
             'review' => 'nullable|string|max:1000',
         ]);
 
-        $rating->update($validated);
+        $rating->fill($validated)->save();
 
         return back()->with('success', 'Calificación actualizada exitosamente.');
     }
@@ -69,13 +70,13 @@ class RatingController extends Controller
     public function destroy(Rating $rating)
     {
         // Verificar que el usuario sea el dueño o tenga permiso de moderador
-        if ($rating->user_id !== auth()->id() && !auth()->user()->can('moderate ratings')) {
+        if ($rating->user_id !== Auth::user()?->id() && !Auth::user()?->can('moderate ratings')) {
             abort(403, 'No puedes eliminar esta calificación.');
         }
 
         $this->authorize('delete own ratings');
 
-        $rating->delete();
+        Rating::destroy($rating->id);
 
         return back()->with('success', 'Calificación eliminada exitosamente.');
     }
@@ -85,7 +86,7 @@ class RatingController extends Controller
      */
     public function myRatings()
     {
-        $ratings = Rating::where('user_id', auth()->id())
+        $ratings = Rating::where('user_id', '=', Auth::user()?->id(), 'and')
             ->with(['item' => function ($query) {
                 $query->with(['uploader', 'categories']);
             }])

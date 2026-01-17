@@ -15,7 +15,7 @@ import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { trans } from 'laravel-vue-i18n';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, LibraryBig, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -23,6 +23,21 @@ const mainNavItems: NavItem[] = [
         title: trans('Dashboard'),
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: trans('Library'),
+        href: '/library/items',
+        icon: LibraryBig,
+    },
+    {
+        title: trans('My Collections'),
+        href: '/user/collections/my',
+        icon: Folder,
+    },
+    {
+        title: trans('Admin'),
+        href: '/admin/dashboard',
+        icon: Users,
     },
 ];
 

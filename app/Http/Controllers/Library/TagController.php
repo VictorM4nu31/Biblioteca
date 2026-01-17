@@ -16,7 +16,7 @@ class TagController extends Controller
     public function index()
     {
         $tags = Tag::withCount('items')
-            ->orderBy('name')
+            ->orderBy('name', 'asc')
             ->get();
 
         return Inertia::render('Library/Tags/Index', [
@@ -61,7 +61,7 @@ class TagController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
-        $tag->update($validated);
+        $tag->fill($validated)->save();
 
         return back()->with('success', 'Etiqueta actualizada exitosamente.');
     }
@@ -73,7 +73,7 @@ class TagController extends Controller
     {
         $this->authorize('manage categories');
 
-        $tag->delete();
+        Tag::destroy($tag->id);
 
         return back()->with('success', 'Etiqueta eliminada exitosamente.');
     }

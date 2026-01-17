@@ -7,6 +7,7 @@ use App\Models\Collection;
 use App\Models\Item;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class CollectionController extends Controller
 {
@@ -19,10 +20,10 @@ class CollectionController extends Controller
             ->withCount('items');
 
         // Mostrar solo colecciones del usuario o públicas
-        if (!auth()->user()->can('view collections')) {
+        if (!Auth::user()?->can('view collections')) {
             $query->where(function ($q) {
-                $q->where('user_id', auth()->id())
-                  ->orWhere('is_public', true);
+                $q->where('user_id', '=', Auth::user()?->id(), 'and')
+                  ->orWhere('is_public', '=', true);
             });
         }
 
@@ -38,7 +39,7 @@ class CollectionController extends Controller
      */
     public function myCollections()
     {
-        $collections = Collection::where('user_id', auth()->id())
+        $collections = Collection::where('user_id', '=', Auth::user()?->id(), 'and')
             ->withCount('items')
             ->latest()
             ->get();
@@ -64,7 +65,7 @@ class CollectionController extends Controller
         $validated = $request->validated();
 
         $collection = Collection::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::user()?->id(),
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'is_public' => $validated['is_public'] ?? false,
@@ -80,7 +81,7 @@ class CollectionController extends Controller
     public function show(Collection $collection)
     {
         // Verificar permisos
-        if ($collection->user_id !== auth()->id() && !$collection->is_public) {
+        if ($collection->user_id !== Auth::user()?->id() && !$collection->is_public) {
             abort(403, 'No tienes permiso para ver esta colección.');
         }
 
@@ -92,7 +93,7 @@ class CollectionController extends Controller
 
         return Inertia::render('User/Collections/Show', [
             'collection' => $collection,
-            'isOwner' => $collection->user_id === auth()->id(),
+            'isOwner' => $collection->user_id === Auth::user()?->id(),
         ]);
     }
 
@@ -117,7 +118,7 @@ class CollectionController extends Controller
 
         $validated = $request->validated();
 
-        $collection->update($validated);
+        $collection->fill($validated)->save();
 
         return redirect()->route('user.collections.show', $collection)
             ->with('success', 'Colección actualizada exitosamente.');
@@ -130,7 +131,7 @@ class CollectionController extends Controller
     {
         $this->authorize('delete', $collection);
 
-        $collection->delete();
+        Collection::destroy($collection->id);
 
         return redirect()->route('user.collections.index')
             ->with('success', 'Colección eliminada exitosamente.');

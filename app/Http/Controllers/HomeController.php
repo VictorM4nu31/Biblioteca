@@ -8,6 +8,7 @@ use App\Models\Collection;
 use App\Models\Rating;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -20,7 +21,7 @@ class HomeController extends Controller
         $featuredItems = Item::with(['uploader', 'categories', 'tags'])
             ->withAvg('ratings', 'rating')
             ->withCount('ratings')
-            ->having('ratings_count', '>=', 3)
+            ->has('ratings', '>=', 3)
             ->orderByDesc('ratings_avg_rating')
             ->take(6)
             ->get();
@@ -33,7 +34,7 @@ class HomeController extends Controller
 
         // Categorías populares
         $popularCategories = Category::withCount('items')
-            ->having('items_count', '>', 0)
+            ->has('items', '>', 0)
             ->orderByDesc('items_count')
             ->take(8)
             ->get();
@@ -42,7 +43,7 @@ class HomeController extends Controller
         $publicCollections = Collection::where('is_public', true)
             ->with('user')
             ->withCount('items')
-            ->having('items_count', '>', 0)
+            ->has('items', '>', 0)
             ->latest()
             ->take(6)
             ->get();
@@ -70,7 +71,7 @@ class HomeController extends Controller
      */
     public function welcome()
     {
-        if (auth()->check()) {
+        if (Auth::check()) {
             return redirect()->route('home');
         }
 

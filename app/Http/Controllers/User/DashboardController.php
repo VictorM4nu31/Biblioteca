@@ -8,6 +8,7 @@ use App\Models\Collection;
 use App\Models\Rating;
 use App\Models\ReadingProgress;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -16,26 +17,26 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Estadísticas del usuario
         $stats = [
-            'total_collections' => Collection::where('user_id', $user->id)->count(),
-            'total_ratings' => Rating::where('user_id', $user->id)->count(),
-            'currently_reading' => ReadingProgress::where('user_id', $user->id)
-                ->where('status', 'reading')
+            'total_collections' => Collection::where('user_id', '=', $user->id, 'and')->count(),
+            'total_ratings' => Rating::where('user_id', '=', $user->id, 'and')->count(),
+            'currently_reading' => ReadingProgress::where('user_id', '=', $user->id, 'and')
+                ->where('status', '=', 'reading', 'and')
                 ->count(),
-            'completed' => ReadingProgress::where('user_id', $user->id)
-                ->where('status', 'completed')
+            'completed' => ReadingProgress::where('user_id', '=', $user->id, 'and')
+                ->where('status', '=', 'completed', 'and')
                 ->count(),
-            'wishlist' => ReadingProgress::where('user_id', $user->id)
-                ->where('status', 'wishlist')
+            'wishlist' => ReadingProgress::where('user_id', '=', $user->id, 'and')
+                ->where('status', '=', 'wishlist', 'and')
                 ->count(),
         ];
 
         // Items en lectura
-        $currentlyReading = ReadingProgress::where('user_id', $user->id)
-            ->where('status', 'reading')
+        $currentlyReading = ReadingProgress::where('user_id', '=', $user->id, 'and')
+            ->where('status', '=', 'reading', 'and')
             ->with(['item' => function ($query) {
                 $query->with(['uploader', 'categories']);
             }])
@@ -44,7 +45,7 @@ class DashboardController extends Controller
             ->get();
 
         // Últimas calificaciones
-        $recentRatings = Rating::where('user_id', $user->id)
+        $recentRatings = Rating::where('user_id', '=', $user->id, 'and')
             ->with(['item' => function ($query) {
                 $query->with(['uploader', 'categories']);
             }])
@@ -53,7 +54,7 @@ class DashboardController extends Controller
             ->get();
 
         // Colecciones del usuario
-        $collections = Collection::where('user_id', $user->id)
+        $collections = Collection::where('user_id', '=', $user->id, 'and')
             ->withCount('items')
             ->latest()
             ->take(5)
